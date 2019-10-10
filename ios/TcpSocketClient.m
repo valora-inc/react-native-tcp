@@ -88,6 +88,26 @@ NSString *const RCTTCPErrorDomain = @"RCTTCPErrorDomain";
     return result;
 }
 
+- (BOOL)connectIPC:(NSString *)path error:(NSError **)error
+{
+    if (_tcpSocket) {
+        if (error) {
+            *error = [self badInvocationError:@"this client's socket is already connected"];
+        }
+
+        return false;
+    }
+
+    _tcpSocket = [[GCDAsyncSocket alloc] initWithDelegate:self delegateQueue:[self methodQueue]];
+    [_tcpSocket setUserData: _id];
+
+    BOOL result = false;
+
+    result = [_tcpSocket connectToUrl:[NSURL URLWithString:path] withTimeout:-1 error:error];
+
+    return result;
+}
+
 - (NSDictionary<NSString *, id> *)getAddress
 {
     if (_tcpSocket)
@@ -225,6 +245,18 @@ NSString *const RCTTCPErrorDomain = @"RCTTCPErrorDomain";
 {
     if (!_clientDelegate) {
         RCTLogWarn(@"didConnectToHost with nil clientDelegate for %@", [sock userData]);
+        return;
+    }
+
+    [_clientDelegate onConnect:self];
+
+    [sock readDataWithTimeout:-1 tag:_id.longValue];
+}
+
+- (void)socket:(GCDAsyncSocket *)sock didConnectToUrl:(NSURL *)url
+{
+    if (!_clientDelegate) {
+        RCTLogWarn(@"didConnectToUrl with nil clientDelegate for %@", [sock userData]);
         return;
     }
 

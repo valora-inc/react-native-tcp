@@ -121,7 +121,7 @@ TcpSocket.prototype.connect = function(options, callback): TcpSocket {
   this._state = STATE.CONNECTING;
   this._destroyed = false;
 
-  if (path.substring(0, 1) === '/') {
+  if (path) {
     this._debug('connecting ipc, path:', path);
     Sockets.connectIPC(this._id, path);
   } else {

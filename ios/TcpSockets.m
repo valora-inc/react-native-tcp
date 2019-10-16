@@ -85,6 +85,22 @@ RCT_EXPORT_METHOD(connect:(nonnull NSNumber*)cId
     }
 }
 
+RCT_EXPORT_METHOD(connectIPC:(nonnull NSNumber*)cId
+                  path:(NSString *)path)
+{
+    TcpSocketClient *client = _clients[cId];
+    if (!client) {
+        client = [self createSocket:cId];
+    }
+
+    NSError *error = nil;
+    if (![client connectIPC:path error:&error])
+    {
+        [self onError:client withError:error];
+        return;
+    }
+}
+
 RCT_EXPORT_METHOD(write:(nonnull NSNumber*)cId
                   string:(NSString *)base64String
                   callback:(RCTResponseSenderBlock)callback) {

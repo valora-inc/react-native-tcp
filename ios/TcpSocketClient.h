@@ -67,6 +67,14 @@ typedef enum RCTTCPError RCTTCPError;
 - (BOOL)connect:(NSString *)host port:(int)port withOptions:(NSDictionary *)options error:(NSError **)error;
 
 /**
+ * Connects to a unix domain socket
+ *
+ * @param path
+ * @return true if connected, false if there was an error
+ */
+- (BOOL)connectIPC:(NSString *)path error:(NSError **)error;
+
+/**
  * Starts listening on a local host and port
  *
  * @param local ip address

@@ -389,7 +389,13 @@ TcpSocket.prototype._write = function(
   if (this._state === STATE.DISCONNECTED) {
     throw new Error('Socket is not connected.');
   } else if (this._state === STATE.CONNECTING) {
-    // we're ok, GCDAsyncSocket handles queueing internally
+    // If we are still connecting, then buffer this for later.
+    // The Writable logic will buffer up any more writes while
+    // waiting for this one to be done.
+    this.once('connect', function connect() {
+      this._write(buffer, encoding, callback);
+    });
+    return
   }
 
   callback = callback || noop;

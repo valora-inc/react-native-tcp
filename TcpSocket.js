@@ -118,6 +118,8 @@ TcpSocket.prototype.connect = function(options, callback): TcpSocket {
     this._activeTimer(this._timeout.msecs);
   }
 
+  this._undestroy()
+
   this._state = STATE.CONNECTING;
   this.writable = true
   this._destroyed = false;

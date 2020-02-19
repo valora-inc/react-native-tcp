@@ -1,7 +1,7 @@
 package com.peel.react;
 
 import android.os.Looper;
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 import android.util.SparseArray;
 
 import com.koushikdutta.async.AsyncNetworkSocket;
@@ -27,6 +27,7 @@ import android.net.LocalSocket;
 import android.net.LocalSocketAddress;
 import android.os.Handler;
 
+import com.reactlibrary;
 
 /**
  * Created by aprock on 12/29/15.
@@ -155,6 +156,21 @@ public final class TcpSocketManager {
     }
 
     public void connectIPC(final Integer cId, final String path) throws IOException {
+	UnixSocketManager.DataCallback onDataCallback =
+	    new UnixSocketManager.DataCallback() {
+		public void onDataAvailable(byte[] data) {
+		    Util.print("onDataAvailable: " + new String(data));
+		}
+	    };
+
+	UnixSocketManager socketManager = new UnixSocketManager();
+	UnixSocketHandler handler = new UnixSocketHandler();
+	socketManager.connect(handler, path);
+	socketManager.setDataCallback(handler, onDataCallback);
+	socketManager.setupLoop();
+    }
+
+    public void connectIPCSync(final Integer cId, final String path) throws IOException {
         // resolve the address
         LocalSocketAddress socketAddress = new LocalSocketAddress(path, LocalSocketAddress.Namespace.FILESYSTEM);
         LocalSocket socket = new LocalSocket();

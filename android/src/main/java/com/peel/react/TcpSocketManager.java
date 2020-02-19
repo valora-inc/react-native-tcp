@@ -27,7 +27,7 @@ import android.net.LocalSocket;
 import android.net.LocalSocketAddress;
 import android.os.Handler;
 
-import com.reactlibrary;
+import com.reactnativeunixsocket.UnixSocketManager;
 
 /**
  * Created by aprock on 12/29/15.

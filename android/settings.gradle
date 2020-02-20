@@ -1,0 +1,5 @@
+rootProject.name = 'react-native-tcp'
+apply from: file("../node_modules/@react-native-community/cli-platform-android/native_modules.gradle"); applyNativeModulesSettingsGradle(settings)
+
+include ':react-native-unix-socket'
+project(':react-native-unix-socket').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-unix-socket/android')

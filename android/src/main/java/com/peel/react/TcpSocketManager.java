@@ -27,7 +27,9 @@ import android.net.LocalSocket;
 import android.net.LocalSocketAddress;
 import android.os.Handler;
 
+import com.reactnativeunixsocket.UnixSocketHandler;
 import com.reactnativeunixsocket.UnixSocketManager;
+
 
 /**
  * Created by aprock on 12/29/15.
@@ -159,7 +161,7 @@ public final class TcpSocketManager {
 	UnixSocketManager.DataCallback onDataCallback =
 	    new UnixSocketManager.DataCallback() {
 		public void onDataAvailable(byte[] data) {
-		    Util.print("onDataAvailable: " + new String(data));
+		    // Util.print("onDataAvailable: " + new String(data));
 		}
 	    };
 

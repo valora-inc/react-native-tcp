@@ -1,3 +1,24 @@
+project.ext.react = [
+  root: "../",
+  cliPath: "../node_modules/react-native/cli.js",
+
+  entryFile: "../TcpSockets.js",
+  enableVmCleanup: false,
+  enableHermes: true,  // clean and rebuild if changing
+  extraPackagerArgs: ["--max-workers=2"],
+  bundleInIntegration: true,
+  devDisabledInIntegration: true,
+  bundleInStaging: true,
+  devDisabledInStaging: true,
+  bundleInAlfajores: false,
+  devDisabledInAlfajores: true,
+  bundleInPilot: true,
+  devDisabledInPilot: true,
+  composeSourceMapsPath: "../node_modules/react-native/scripts/compose-source-maps.js",
+  hermesCommand: "../node_modules/hermes-engine/%OS-BIN%/hermes",
+  nodeExecutableAndArgs: ["node"]
+]
+
 def safeExtGet(prop, fallback) {
     rootProject.ext.has(prop) ? rootProject.ext.get(prop) : fallback
 }
@@ -18,6 +39,7 @@ buildscript {
 }
 
 apply plugin: 'com.android.library'
+apply from: "../node_modules/react-native/react.gradle"
 
 android {
     compileSdkVersion safeExtGet('compileSdkVersion', 28)
@@ -29,6 +51,19 @@ android {
     lintOptions {
         abortOnError false
         warning 'InvalidPackage'
+    }
+    buildTypes {
+
+        debug {
+            multiDexEnabled true
+        }
+
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules\
+.pro"
+            matchingFallbacks = ['release']
+        }
     }
 }
 
@@ -48,7 +83,7 @@ repositories {
 
 dependencies {
     //noinspection GradleDynamicVersion
-    implementation project(':react-native-unix-socket')
+//    implementation project(':react-native-unix-socket')
     implementation 'com.facebook.react:react-native:+'  // From node_modules
     implementation 'com.koushikdutta.async:androidasync:2.1.6'
 }

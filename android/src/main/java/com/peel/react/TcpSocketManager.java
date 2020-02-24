@@ -1,5 +1,6 @@
 package com.peel.react;
 
+import android.util.Log;
 import android.os.Looper;
 import androidx.annotation.Nullable;
 import android.util.SparseArray;
@@ -35,6 +36,9 @@ import com.reactnativeunixsocket.UnixSocketManager;
  * Created by aprock on 12/29/15.
  */
 public final class TcpSocketManager {
+
+    private static final String TAG = "TcpSocketManager";
+
     private SparseArray<Object> mClients = new SparseArray<Object>();
     private SparseArray<Handler> mSocketReaders = new SparseArray<Handler>();
 
@@ -45,6 +49,7 @@ public final class TcpSocketManager {
 
     public TcpSocketManager(TcpSocketListener listener) throws IOException {
         mListener = new WeakReference<TcpSocketListener>(listener);
+	Log.i(TAG, "TcpSocketManager constructor listener: " + listener);
     }
 
     private void setSocketCallbacks(final Integer cId, final AsyncSocket socket) {
@@ -161,7 +166,7 @@ public final class TcpSocketManager {
 	UnixSocketManager.DataCallback onDataCallback =
 	    new UnixSocketManager.DataCallback() {
 		public void onDataAvailable(byte[] data) {
-		    // Util.print("onDataAvailable: " + new String(data));
+		    Log.i(TAG, "onDataAvailable: " + new String(data));
 		}
 	    };
 

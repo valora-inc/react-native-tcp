@@ -1,7 +1,7 @@
 package com.peel.react;
 
 import android.os.Looper;
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 import android.util.SparseArray;
 
 import com.koushikdutta.async.AsyncNetworkSocket;
@@ -26,6 +26,8 @@ import java.net.UnknownHostException;
 import android.net.LocalSocket;
 import android.net.LocalSocketAddress;
 import android.os.Handler;
+
+import com.reactnativeunixsocket.UnixSocketHandler;
 
 
 /**

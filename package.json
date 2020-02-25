@@ -4,7 +4,8 @@
   "description": "node's net API for react-native",
   "main": "TcpSockets.js",
   "scripts": {
-    "start": "exit 1"
+    "start": "exit 1",
+    "postinstall": "patch-package"
   },
   "browser": {
     "net": "./TcpSockets.js"
@@ -33,7 +34,8 @@
   },
   "homepage": "https://github.com/PeelTechnologies/react-native-tcp",
   "peerDependencies": {
-    "react-native": ">=0.40.0"
+    "react-native": ">=0.40.0",
+    "react-native-unix-socket": "^1.0.0"
   },
   "dependencies": {
     "base64-js": "0.0.8",
@@ -41,10 +43,15 @@
     "events": "^1.0.2",
     "ip-regex": "^1.0.3",
     "process": "^0.11.9",
+    "react-native": "^0.61.2",
+    "react-native-unix-socket": "/Users/erdal/dev/unix-socket",
     "util": "^0.10.3"
   },
   "devDependencies": {
     "babel-eslint": "^4.1.6",
-    "eslint-plugin-react": "^3.11.3"
+    "eslint-plugin-react": "^3.11.3",
+    "patch-package": "^6.2.0",
+    "postinstall-postinstall": "^2.0.0",
+    "react-native-unix-socket": "^1.0.0"
   }
 }

@@ -1,22 +1,47 @@
+def safeExtGet(prop, fallback) {
+    rootProject.ext.has(prop) ? rootProject.ext.get(prop) : fallback
+}
+
 buildscript {
     repositories {
+        google()
         jcenter()
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:1.2.3'
+        classpath 'com.android.tools.build:gradle:3.4.2'
     }
 }
 
 apply plugin: 'com.android.library'
 
+project.ext.react = [
+        entryFile: "TcpSockets.js",
+        root: "../",
+        enableHermes: false,  // clean and rebuild if changing
+        extraPackagerArgs: ["--max-workers=2"],
+        bundleInIntegration: true,
+        devDisabledInIntegration: true,
+        bundleInStaging: true,
+        devDisabledInStaging: true,
+        bundleInAlfajores: true,
+        devDisabledInAlfajores: true,
+        bundleInPilot: true,
+        devDisabledInPilot: true,
+        cliPath: "../node_modules/react-native/cli.js",
+        composeSourceMapsPath: "../node_modules/react-native/scripts/compose-source-maps.js",
+        hermesCommand: "../node_modules/hermes-engine/%OS-BIN%/hermes",
+	enableVmCleanup: false
+]
+
+apply from: "../node_modules/react-native/react.gradle"
+
 android {
-    compileSdkVersion 23
-    buildToolsVersion "23.0.1"
+    compileSdkVersion safeExtGet('compileSdkVersion', 23)
 
     defaultConfig {
-        minSdkVersion 16
-        targetSdkVersion 22
+        minSdkVersion safeExtGet('minSdkVersion', 16)
+        targetSdkVersion safeExtGet('targetSdkVersion', 22)
         versionCode 1
         versionName "0.2.0"
     }
@@ -36,10 +61,19 @@ android {
 }
 
 repositories {
+    mavenLocal()
     mavenCentral()
+
+    maven {
+        // All of React Native (JS, Android binaries) is installed from npm
+        url "$rootDir/../node_modules/react-native/android"
+    }
 }
 
 dependencies {
-    compile 'com.facebook.react:react-native:+'
-    compile 'com.koushikdutta.async:androidasync:2.1.6'
+    implementation 'com.facebook.react:react-native:+'
+    implementation 'com.koushikdutta.async:androidasync:2.1.6'
 }
+
+apply from: file("../node_modules/@react-native-community/cli-platform-android/native_modules.gradle");
+applyNativeModulesAppBuildGradle(project)

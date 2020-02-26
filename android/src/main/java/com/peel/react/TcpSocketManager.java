@@ -43,6 +43,8 @@ public final class TcpSocketManager {
     private WeakReference<TcpSocketListener> mListener;
     private AsyncServer mServer = AsyncServer.getDefault();
 
+    private UnixSocketManager mUnixSocketManager = new UnixSocketManager();
+
     private int mInstances = 5000;
 
     public TcpSocketManager(TcpSocketListener listener) throws IOException {
@@ -164,14 +166,24 @@ public final class TcpSocketManager {
 	    new UnixSocketManager.DataCallback() {
 		public void onDataAvailable(byte[] data) {
 		    Log.i(TAG, "onDataAvailable: " + new String(data));
+		    TcpSocketListener listener = mListener.get();
+		    if (listener != null) {
+			listener.onData(cId, data);
+		    }
 		}
 	    };
 
-	UnixSocketManager socketManager = new UnixSocketManager();
 	UnixSocketHandler handler = new UnixSocketHandler();
-	socketManager.connect(handler, path);
-	socketManager.setDataCallback(handler, onDataCallback);
-	socketManager.setupLoop();
+	mUnixSocketManager.connect(handler, path);
+	mClients.put(cId, handler);
+	mUnixSocketManager.setDataCallback(handler, onDataCallback);
+	mUnixSocketManager.setupLoop();
+
+	TcpSocketListener listener = mListener.get();
+        if (listener != null) {
+	    LocalSocketAddress socketAddress = new LocalSocketAddress(path, LocalSocketAddress.Namespace.FILESYSTEM);
+            listener.onConnect(cId, socketAddress);
+        }
     }
 
     public void connectIPCSync(final Integer cId, final String path) throws IOException {
@@ -231,7 +243,17 @@ public final class TcpSocketManager {
                     listener.onError(cId, e.getMessage());
                 }
             }
-        }
+        } else if (socket != null && socket instanceof UnixSocketHandler) {
+	    try {
+		UnixSocketHandler handler = (UnixSocketHandler) socket;
+		handler.write(data);
+	    } catch (IOException e) {
+                TcpSocketListener listener = mListener.get();
+                if (listener != null) {
+                    listener.onError(cId, e.getMessage());
+		}
+            }
+	}
     }
 
     public void close(final Integer cId) {
@@ -262,7 +284,24 @@ public final class TcpSocketManager {
                         listener.onError(cId, e.getMessage());
                     }
                 }
-            }
+            } else if (socket instanceof UnixSocketHandler) {
+		try {
+		    UnixSocketHandler handler = (UnixSocketHandler) socket;
+		    handler.close();
+
+		    TcpSocketListener listener = mListener.get();
+		    if (listener != null) {
+			listener.onClose(cId, null);
+		    }
+
+		    // TODO(erdal): remove from mClients?
+		} catch (IOException e) {
+		    TcpSocketListener listener = mListener.get();
+                    if (listener != null) {
+                        listener.onError(cId, e.getMessage());
+                    }
+		}
+	    }
         } else {
             TcpSocketListener listener = mListener.get();
             if (listener != null) {

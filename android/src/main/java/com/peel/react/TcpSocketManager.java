@@ -1,8 +1,9 @@
 package com.peel.react;
 
 import android.os.Looper;
-import android.support.annotation.Nullable;
+import android.util.Log;
 import android.util.SparseArray;
+import androidx.annotation.Nullable;
 
 import com.koushikdutta.async.AsyncNetworkSocket;
 import com.koushikdutta.async.AsyncServer;
@@ -27,11 +28,15 @@ import android.net.LocalSocket;
 import android.net.LocalSocketAddress;
 import android.os.Handler;
 
+import com.unixsocket.UnixSocketHandler;
+import com.unixsocket.UnixSocketManager;
 
 /**
  * Created by aprock on 12/29/15.
  */
 public final class TcpSocketManager {
+    private static final String TAG = "TcpSocketManager";
+
     private SparseArray<Object> mClients = new SparseArray<Object>();
     private SparseArray<Handler> mSocketReaders = new SparseArray<Handler>();
 
@@ -155,6 +160,21 @@ public final class TcpSocketManager {
     }
 
     public void connectIPC(final Integer cId, final String path) throws IOException {
+	UnixSocketManager.DataCallback onDataCallback =
+	    new UnixSocketManager.DataCallback() {
+		public void onDataAvailable(byte[] data) {
+		    Log.i(TAG, "onDataAvailable: " + new String(data));
+		}
+	    };
+
+	UnixSocketManager socketManager = new UnixSocketManager();
+	UnixSocketHandler handler = new UnixSocketHandler();
+	socketManager.connect(handler, path);
+	socketManager.setDataCallback(handler, onDataCallback);
+	socketManager.setupLoop();
+    }
+
+    public void connectIPCSync(final Integer cId, final String path) throws IOException {
         // resolve the address
         LocalSocketAddress socketAddress = new LocalSocketAddress(path, LocalSocketAddress.Namespace.FILESYSTEM);
         LocalSocket socket = new LocalSocket();

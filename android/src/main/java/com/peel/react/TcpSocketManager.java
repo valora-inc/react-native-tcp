@@ -165,10 +165,17 @@ public final class TcpSocketManager {
 	UnixSocketManager.DataCallback onDataCallback =
 	    new UnixSocketManager.DataCallback() {
 		public void onDataAvailable(byte[] data) {
-		    Log.i(TAG, "onDataAvailable: " + new String(data));
+		    Log.d(TAG, "onDataAvailable: " + new String(data));
 		    TcpSocketListener listener = mListener.get();
 		    if (listener != null) {
 			listener.onData(cId, data);
+		    }
+		}
+
+		public void onError(String message) {
+		    TcpSocketListener listener = mListener.get();
+		    if (listener != null) {
+			listener.onError(cId, message);
 		    }
 		}
 	    };

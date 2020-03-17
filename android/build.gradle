@@ -1,10 +1,11 @@
 buildscript {
     repositories {
+        google()
         jcenter()
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:1.2.3'
+        classpath 'com.android.tools.build:gradle:3.6.0'
     }
 }
 
@@ -37,9 +38,13 @@ android {
 
 repositories {
     mavenCentral()
+    google()
+    jcenter()
 }
 
 dependencies {
-    compile 'com.facebook.react:react-native:+'
-    compile 'com.koushikdutta.async:androidasync:2.1.6'
+    implementation 'com.facebook.react:react-native:+'
+    implementation 'com.koushikdutta.async:androidasync:2.1.6'
+
+    implementation fileTree(dir: 'libs', include: ['*.aar'])
 }

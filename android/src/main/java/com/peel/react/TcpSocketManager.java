@@ -1,8 +1,9 @@
 package com.peel.react;
 
 import android.os.Looper;
-import android.support.annotation.Nullable;
+import android.util.Log;
 import android.util.SparseArray;
+import androidx.annotation.Nullable;
 
 import com.koushikdutta.async.AsyncNetworkSocket;
 import com.koushikdutta.async.AsyncServer;
@@ -27,16 +28,22 @@ import android.net.LocalSocket;
 import android.net.LocalSocketAddress;
 import android.os.Handler;
 
+import com.unixsocket.UnixSocketHandler;
+import com.unixsocket.UnixSocketManager;
 
 /**
  * Created by aprock on 12/29/15.
  */
 public final class TcpSocketManager {
+    private static final String TAG = "TcpSocketManager";
+
     private SparseArray<Object> mClients = new SparseArray<Object>();
     private SparseArray<Handler> mSocketReaders = new SparseArray<Handler>();
 
     private WeakReference<TcpSocketListener> mListener;
     private AsyncServer mServer = AsyncServer.getDefault();
+
+    private UnixSocketManager mUnixSocketManager = new UnixSocketManager();
 
     private int mInstances = 5000;
 
@@ -155,6 +162,38 @@ public final class TcpSocketManager {
     }
 
     public void connectIPC(final Integer cId, final String path) throws IOException {
+	UnixSocketManager.DataCallback onDataCallback =
+	    new UnixSocketManager.DataCallback() {
+		public void onDataAvailable(byte[] data) {
+		    Log.d(TAG, "onDataAvailable: " + new String(data));
+		    TcpSocketListener listener = mListener.get();
+		    if (listener != null) {
+			listener.onData(cId, data);
+		    }
+		}
+
+		public void onError(String message) {
+		    TcpSocketListener listener = mListener.get();
+		    if (listener != null) {
+			listener.onError(cId, message);
+		    }
+		}
+	    };
+
+	UnixSocketHandler handler = new UnixSocketHandler();
+	mUnixSocketManager.connect(handler, path);
+	mClients.put(cId, handler);
+	mUnixSocketManager.setDataCallback(handler, onDataCallback);
+	mUnixSocketManager.setupLoop();
+
+	TcpSocketListener listener = mListener.get();
+        if (listener != null) {
+	    LocalSocketAddress socketAddress = new LocalSocketAddress(path, LocalSocketAddress.Namespace.FILESYSTEM);
+            listener.onConnect(cId, socketAddress);
+        }
+    }
+
+    public void connectIPCSync(final Integer cId, final String path) throws IOException {
         // resolve the address
         LocalSocketAddress socketAddress = new LocalSocketAddress(path, LocalSocketAddress.Namespace.FILESYSTEM);
         LocalSocket socket = new LocalSocket();
@@ -211,7 +250,17 @@ public final class TcpSocketManager {
                     listener.onError(cId, e.getMessage());
                 }
             }
-        }
+        } else if (socket != null && socket instanceof UnixSocketHandler) {
+	    try {
+		UnixSocketHandler handler = (UnixSocketHandler) socket;
+		handler.write(data);
+	    } catch (IOException e) {
+                TcpSocketListener listener = mListener.get();
+                if (listener != null) {
+                    listener.onError(cId, e.getMessage());
+		}
+            }
+	}
     }
 
     public void close(final Integer cId) {
@@ -242,7 +291,24 @@ public final class TcpSocketManager {
                         listener.onError(cId, e.getMessage());
                     }
                 }
-            }
+            } else if (socket instanceof UnixSocketHandler) {
+		try {
+		    UnixSocketHandler handler = (UnixSocketHandler) socket;
+		    handler.close();
+
+		    TcpSocketListener listener = mListener.get();
+		    if (listener != null) {
+			listener.onClose(cId, null);
+		    }
+
+		    // TODO(erdal): remove from mClients?
+		} catch (IOException e) {
+		    TcpSocketListener listener = mListener.get();
+                    if (listener != null) {
+                        listener.onError(cId, e.getMessage());
+                    }
+		}
+	    }
         } else {
             TcpSocketListener listener = mListener.get();
             if (listener != null) {

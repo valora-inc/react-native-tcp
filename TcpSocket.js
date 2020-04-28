@@ -65,7 +65,7 @@ util.inherits(TcpSocket, stream.Duplex);
 TcpSocket.prototype._debug = function() {
   if (__DEV__) {
     var args = [].slice.call(arguments);
-    args.unshift('socket-' + this._id);
+    args.unshift('RNTcpSocket-' + this._id);
     console.log.apply(console, args);
   }
 };
@@ -118,7 +118,10 @@ TcpSocket.prototype.connect = function(options, callback): TcpSocket {
     this._activeTimer(this._timeout.msecs);
   }
 
+  this._undestroy()
+
   this._state = STATE.CONNECTING;
+  this.writable = true
   this._destroyed = false;
 
   if (path) {
@@ -249,6 +252,7 @@ TcpSocket.prototype.end = function(data, encoding) {
 TcpSocket.prototype.destroy = function() {
   if (!this._destroyed) {
     this._destroyed = true;
+    this.writable = false;
     this._debug('destroying');
     this._clearTimeout();
 
@@ -389,7 +393,13 @@ TcpSocket.prototype._write = function(
   if (this._state === STATE.DISCONNECTED) {
     throw new Error('Socket is not connected.');
   } else if (this._state === STATE.CONNECTING) {
-    // we're ok, GCDAsyncSocket handles queueing internally
+    // If we are still connecting, then buffer this for later.
+    // The Writable logic will buffer up any more writes while
+    // waiting for this one to be done.
+    this.once('connect', function connect() {
+      this._write(buffer, encoding, callback);
+    });
+    return
   }
 
   callback = callback || noop;
@@ -436,6 +446,7 @@ function setDisconnected(socket: TcpSocket, hadError: boolean): void {
 
   socket._unregisterEvents();
   socket._state = STATE.DISCONNECTED;
+  socket.writable = false;
   socket.emit('close', hadError);
 }
 
